@@ -1,0 +1,15 @@
+{
+    "name": "uzair-khan-registry",
+    "owner": {
+        "name": "Uzair Khan",
+        "url": "https://github.com/maverox"
+    },
+    "description": "Uzair Khan collection of Claude Code plugins",
+    "plugins": [
+        {
+            "name": "connector-integration-suite",
+            "description": "Complete connector integration toolkit",
+            "source": "./plugins/connector-integration-suite"
+        }
+    ]
+}

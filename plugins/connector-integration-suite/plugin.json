@@ -1,0 +1,26 @@
+{
+    "name": "connector-integration-suite",
+    "version": "1.0.0",
+    "description": "Complete connector integration toolkit for payment gateway integrations. Includes skills for API research, implementation planning, code generation, PR review, and telemetry hooks.",
+    "author": {
+        "name": "Uzair Khan",
+        "url": "https://github.com/maverox"
+    },
+    "repository": "https://github.com/maverox/claude-plugins",
+    "license": "Apache-2.0",
+    "keywords": [
+        "connector",
+        "payment-gateway",
+        "integration",
+        "rust",
+        "code-generation",
+        "pr-review",
+        "telemetry"
+    ],
+    "commands": [
+        "./commands/connector-integrate.md",
+        "./commands/pr-review.md"
+    ],
+    "agents": "./agents/",
+    "hooks": "./hooks/hooks.json"
+}

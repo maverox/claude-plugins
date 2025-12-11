@@ -1,0 +1,1145 @@
+use std::fmt::Debug;
+
+use domain_types::{
+    connector_flow::{
+        Accept, Authenticate, Authorize, Capture, CreateAccessToken, CreateConnectorCustomer,
+        CreateOrder, CreateSessionToken, DefendDispute, PaymentMethodToken, PostAuthenticate,
+        PreAuthenticate, PSync, RSync, Refund, RepeatPayment, SetupMandate, SubmitEvidence, Void,
+    },
+    connector_types::{
+        AcceptDisputeData, AccessTokenRequestData, AccessTokenResponseData, ConnectorCustomerData,
+        ConnectorCustomerResponse, DisputeDefendData, DisputeFlowData, DisputeResponseData,
+        PaymentCreateOrderData, PaymentCreateOrderResponse, PaymentFlowData,
+        PaymentMethodTokenizationData, PaymentMethodTokenResponse, PaymentVoidData,
+        PaymentsAuthenticateData, PaymentsAuthorizeData, PaymentsCaptureData,
+        PaymentsPostAuthenticateData, PaymentsPreAuthenticateData, PaymentsResponseData,
+        PaymentsSyncData, RefundFlowData, RefundSyncData, RefundsData, RefundsResponseData,
+        RepeatPaymentData, ResponseId, SessionTokenRequestData, SessionTokenResponseData,
+        SetupMandateRequestData, SubmitEvidenceData,
+    },
+    errors,
+    payment_method_data::{PaymentMethodData, PaymentMethodDataTypes},
+    router_data::{ConnectorAuthType, ErrorResponse},
+    router_data_v2::RouterDataV2,
+};
+use hyperswitch_masking::{ExposeInterface, Secret};
+use serde::Serialize;
+
+use super::{requests, responses};
+use crate::{types::ResponseRouterData, utils};
+
+#[derive(Debug, Clone)]
+pub struct {{CONNECTOR_NAME_PASCAL}}AuthType {
+    pub api_key: Secret<String>,
+}
+
+impl TryFrom<&ConnectorAuthType> for {{CONNECTOR_NAME_PASCAL}}AuthType {
+    type Error = error_stack::Report<errors::ConnectorError>;
+
+    fn try_from(auth_type: &ConnectorAuthType) -> Result<Self, Self::Error> {
+        match auth_type {
+            ConnectorAuthType::HeaderKey { api_key } => Ok(Self {
+                api_key: api_key.to_owned(),
+            }),
+            _ => Err(errors::ConnectorError::FailedToObtainAuthType.into()),
+        }
+    }
+}
+
+impl<T: PaymentMethodDataTypes + Debug + Sync + Send + 'static + Serialize>
+    TryFrom<
+        ResponseRouterData<
+            responses::{{CONNECTOR_NAME_PASCAL}}AuthorizeResponse,
+            RouterDataV2<
+                Authorize,
+                PaymentFlowData,
+                PaymentsAuthorizeData<T>,
+                PaymentsResponseData,
+            >,
+        >,
+    > for RouterDataV2<Authorize, PaymentFlowData, PaymentsAuthorizeData<T>, PaymentsResponseData>
+{
+    type Error = error_stack::Report<errors::ConnectorError>;
+
+    fn try_from(
+        item: ResponseRouterData<
+            responses::{{CONNECTOR_NAME_PASCAL}}AuthorizeResponse,
+            RouterDataV2<
+                Authorize,
+                PaymentFlowData,
+                PaymentsAuthorizeData<T>,
+                PaymentsResponseData,
+            >,
+        >,
+    ) -> Result<Self, Self::Error> {
+        // TODO: Implement response transformation
+        Ok(item.router_data)
+    }
+}
+
+impl TryFrom<
+    ResponseRouterData<
+        responses::{{CONNECTOR_NAME_PASCAL}}CaptureResponse,
+        RouterDataV2<Capture, PaymentFlowData, PaymentsCaptureData, PaymentsResponseData>,
+    >,
+> for RouterDataV2<Capture, PaymentFlowData, PaymentsCaptureData, PaymentsResponseData>
+{
+    type Error = error_stack::Report<errors::ConnectorError>;
+
+    fn try_from(
+        item: ResponseRouterData<
+            responses::{{CONNECTOR_NAME_PASCAL}}CaptureResponse,
+            RouterDataV2<Capture, PaymentFlowData, PaymentsCaptureData, PaymentsResponseData>,
+        >,
+    ) -> Result<Self, Self::Error> {
+        // TODO: Implement response transformation
+        Ok(item.router_data)
+    }
+}
+
+impl TryFrom<
+    ResponseRouterData<
+        responses::{{CONNECTOR_NAME_PASCAL}}VoidResponse,
+        RouterDataV2<Void, PaymentFlowData, PaymentVoidData, PaymentsResponseData>,
+    >,
+> for RouterDataV2<Void, PaymentFlowData, PaymentVoidData, PaymentsResponseData>
+{
+    type Error = error_stack::Report<errors::ConnectorError>;
+
+    fn try_from(
+        item: ResponseRouterData<
+            responses::{{CONNECTOR_NAME_PASCAL}}VoidResponse,
+            RouterDataV2<Void, PaymentFlowData, PaymentVoidData, PaymentsResponseData>,
+        >,
+    ) -> Result<Self, Self::Error> {
+        // TODO: Implement response transformation
+        Ok(item.router_data)
+    }
+}
+
+impl TryFrom<
+    ResponseRouterData<
+        responses::{{CONNECTOR_NAME_PASCAL}}TransactionResponse,
+        RouterDataV2<PSync, PaymentFlowData, PaymentsSyncData, PaymentsResponseData>,
+    >,
+> for RouterDataV2<PSync, PaymentFlowData, PaymentsSyncData, PaymentsResponseData>
+{
+    type Error = error_stack::Report<errors::ConnectorError>;
+
+    fn try_from(
+        item: ResponseRouterData<
+            responses::{{CONNECTOR_NAME_PASCAL}}TransactionResponse,
+            RouterDataV2<PSync, PaymentFlowData, PaymentsSyncData, PaymentsResponseData>,
+        >,
+    ) -> Result<Self, Self::Error> {
+        // TODO: Implement response transformation
+        Ok(item.router_data)
+    }
+}
+
+impl TryFrom<
+    ResponseRouterData<
+        responses::{{CONNECTOR_NAME_PASCAL}}RefundResponse,
+        RouterDataV2<Refund, RefundFlowData, RefundsData, RefundsResponseData>,
+    >,
+> for RouterDataV2<Refund, RefundFlowData, RefundsData, RefundsResponseData>
+{
+    type Error = error_stack::Report<errors::ConnectorError>;
+
+    fn try_from(
+        item: ResponseRouterData<
+            responses::{{CONNECTOR_NAME_PASCAL}}RefundResponse,
+            RouterDataV2<Refund, RefundFlowData, RefundsData, RefundsResponseData>,
+        >,
+    ) -> Result<Self, Self::Error> {
+        // TODO: Implement response transformation
+        Ok(item.router_data)
+    }
+}
+
+impl TryFrom<
+    ResponseRouterData<
+        responses::{{CONNECTOR_NAME_PASCAL}}RsyncResponse,
+        RouterDataV2<RSync, RefundFlowData, RefundSyncData, RefundsResponseData>,
+    >,
+> for RouterDataV2<RSync, RefundFlowData, RefundSyncData, RefundsResponseData>
+{
+    type Error = error_stack::Report<errors::ConnectorError>;
+
+    fn try_from(
+        item: ResponseRouterData<
+            responses::{{CONNECTOR_NAME_PASCAL}}RsyncResponse,
+            RouterDataV2<RSync, RefundFlowData, RefundSyncData, RefundsResponseData>,
+        >,
+    ) -> Result<Self, Self::Error> {
+        // TODO: Implement response transformation
+        Ok(item.router_data)
+    }
+}
+
+impl<T: PaymentMethodDataTypes + Debug + Sync + Send + 'static + Serialize>
+    TryFrom<
+        super::{{CONNECTOR_NAME_PASCAL}}RouterData<
+            RouterDataV2<
+                Authorize,
+                PaymentFlowData,
+                PaymentsAuthorizeData<T>,
+                PaymentsResponseData,
+            >,
+            T,
+        >,
+    > for requests::{{CONNECTOR_NAME_PASCAL}}PaymentsRequest<T>
+{
+    type Error = error_stack::Report<errors::ConnectorError>;
+
+    fn try_from(
+        item: super::{{CONNECTOR_NAME_PASCAL}}RouterData<
+            RouterDataV2<
+                Authorize,
+                PaymentFlowData,
+                PaymentsAuthorizeData<T>,
+                PaymentsResponseData,
+            >,
+            T,
+        >,
+    ) -> Result<Self, Self::Error> {
+        let _item = item.router_data;
+        // TODO: Implement request transformation
+        Err(errors::ConnectorError::NotImplemented("Authorize flow not implemented".to_string()).into())
+    }
+}
+
+impl<T: PaymentMethodDataTypes + Debug + Sync + Send + 'static + Serialize>
+    TryFrom<
+        super::{{CONNECTOR_NAME_PASCAL}}RouterData<
+            RouterDataV2<
+                Capture,
+                PaymentFlowData,
+                PaymentsCaptureData,
+                PaymentsResponseData,
+            >,
+            T,
+        >,
+    > for requests::{{CONNECTOR_NAME_PASCAL}}CaptureRequest
+{
+    type Error = error_stack::Report<errors::ConnectorError>;
+
+    fn try_from(
+        item: super::{{CONNECTOR_NAME_PASCAL}}RouterData<
+            RouterDataV2<
+                Capture,
+                PaymentFlowData,
+                PaymentsCaptureData,
+                PaymentsResponseData,
+            >,
+            T,
+        >,
+    ) -> Result<Self, Self::Error> {
+        let _item = item.router_data;
+        // TODO: Implement request transformation
+        Err(errors::ConnectorError::NotImplemented("Capture flow not implemented".to_string()).into())
+    }
+}
+
+impl<T: PaymentMethodDataTypes + Debug + Sync + Send + 'static + Serialize>
+    TryFrom<
+        super::{{CONNECTOR_NAME_PASCAL}}RouterData<
+            RouterDataV2<
+                Void,
+                PaymentFlowData,
+                PaymentVoidData,
+                PaymentsResponseData,
+            >,
+            T,
+        >,
+    > for requests::{{CONNECTOR_NAME_PASCAL}}VoidRequest
+{
+    type Error = error_stack::Report<errors::ConnectorError>;
+
+    fn try_from(
+        item: super::{{CONNECTOR_NAME_PASCAL}}RouterData<
+            RouterDataV2<
+                Void,
+                PaymentFlowData,
+                PaymentVoidData,
+                PaymentsResponseData,
+            >,
+            T,
+        >,
+    ) -> Result<Self, Self::Error> {
+        let _item = item.router_data;
+        // TODO: Implement request transformation
+        Err(errors::ConnectorError::NotImplemented("Void flow not implemented".to_string()).into())
+    }
+}
+
+impl<T: PaymentMethodDataTypes + Debug + Sync + Send + 'static + Serialize>
+    TryFrom<
+        super::{{CONNECTOR_NAME_PASCAL}}RouterData<
+            RouterDataV2<
+                Refund,
+                RefundFlowData,
+                RefundsData,
+                RefundsResponseData,
+            >,
+            T,
+        >,
+    > for requests::{{CONNECTOR_NAME_PASCAL}}RefundRequest
+{
+    type Error = error_stack::Report<errors::ConnectorError>;
+
+    fn try_from(
+        item: super::{{CONNECTOR_NAME_PASCAL}}RouterData<
+            RouterDataV2<
+                Refund,
+                RefundFlowData,
+                RefundsData,
+                RefundsResponseData,
+            >,
+            T,
+        >,
+    ) -> Result<Self, Self::Error> {
+        let _item = item.router_data;
+        // TODO: Implement request transformation
+        Err(errors::ConnectorError::NotImplemented("Refund flow not implemented".to_string()).into())
+    }
+}
+
+impl TryFrom<
+        ResponseRouterData<
+            responses::{{CONNECTOR_NAME_PASCAL}}CreateOrderResponse,
+            RouterDataV2<
+                CreateOrder,
+                PaymentFlowData,
+                PaymentCreateOrderData,
+                PaymentCreateOrderResponse,
+            >,
+        >,
+    >
+    for RouterDataV2<
+        CreateOrder,
+        PaymentFlowData,
+        PaymentCreateOrderData,
+        PaymentCreateOrderResponse,
+    >
+{
+    type Error = error_stack::Report<errors::ConnectorError>;
+
+    fn try_from(
+        item: ResponseRouterData<
+            responses::{{CONNECTOR_NAME_PASCAL}}CreateOrderResponse,
+            RouterDataV2<
+                CreateOrder,
+                PaymentFlowData,
+                PaymentCreateOrderData,
+                PaymentCreateOrderResponse,
+            >,
+        >,
+    ) -> Result<Self, Self::Error> {
+        Ok(item.router_data)
+    }
+}
+
+impl TryFrom<
+        ResponseRouterData<
+            responses::{{CONNECTOR_NAME_PASCAL}}CreateSessionTokenResponse,
+            RouterDataV2<
+                CreateSessionToken,
+                PaymentFlowData,
+                SessionTokenRequestData,
+                SessionTokenResponseData,
+            >,
+        >,
+    >
+    for RouterDataV2<
+        CreateSessionToken,
+        PaymentFlowData,
+        SessionTokenRequestData,
+        SessionTokenResponseData,
+    >
+{
+    type Error = error_stack::Report<errors::ConnectorError>;
+
+    fn try_from(
+        item: ResponseRouterData<
+            responses::{{CONNECTOR_NAME_PASCAL}}CreateSessionTokenResponse,
+            RouterDataV2<
+                CreateSessionToken,
+                PaymentFlowData,
+                SessionTokenRequestData,
+                SessionTokenResponseData,
+            >,
+        >,
+    ) -> Result<Self, Self::Error> {
+        Ok(item.router_data)
+    }
+}
+
+impl TryFrom<
+        ResponseRouterData<
+            responses::{{CONNECTOR_NAME_PASCAL}}CreateAccessTokenResponse,
+            RouterDataV2<
+                CreateAccessToken,
+                PaymentFlowData,
+                AccessTokenRequestData,
+                AccessTokenResponseData,
+            >,
+        >,
+    >
+    for RouterDataV2<
+        CreateAccessToken,
+        PaymentFlowData,
+        AccessTokenRequestData,
+        AccessTokenResponseData,
+    >
+{
+    type Error = error_stack::Report<errors::ConnectorError>;
+
+    fn try_from(
+        item: ResponseRouterData<
+            responses::{{CONNECTOR_NAME_PASCAL}}CreateAccessTokenResponse,
+            RouterDataV2<
+                CreateAccessToken,
+                PaymentFlowData,
+                AccessTokenRequestData,
+                AccessTokenResponseData,
+            >,
+        >,
+    ) -> Result<Self, Self::Error> {
+        Ok(item.router_data)
+    }
+}
+
+impl TryFrom<
+        ResponseRouterData<
+            responses::{{CONNECTOR_NAME_PASCAL}}CreateConnectorCustomerResponse,
+            RouterDataV2<
+                CreateConnectorCustomer,
+                PaymentFlowData,
+                ConnectorCustomerData,
+                ConnectorCustomerResponse,
+            >,
+        >,
+    >
+    for RouterDataV2<
+        CreateConnectorCustomer,
+        PaymentFlowData,
+        ConnectorCustomerData,
+        ConnectorCustomerResponse,
+    >
+{
+    type Error = error_stack::Report<errors::ConnectorError>;
+
+    fn try_from(
+        item: ResponseRouterData<
+            responses::{{CONNECTOR_NAME_PASCAL}}CreateConnectorCustomerResponse,
+            RouterDataV2<
+                CreateConnectorCustomer,
+                PaymentFlowData,
+                ConnectorCustomerData,
+                ConnectorCustomerResponse,
+            >,
+        >,
+    ) -> Result<Self, Self::Error> {
+        Ok(item.router_data)
+    }
+}
+
+impl<T: PaymentMethodDataTypes + Debug + Sync + Send + 'static + Serialize>
+    TryFrom<
+        ResponseRouterData<
+            responses::{{CONNECTOR_NAME_PASCAL}}PaymentMethodTokenResponse,
+            RouterDataV2<
+                PaymentMethodToken,
+                PaymentFlowData,
+                PaymentMethodTokenizationData<T>,
+                PaymentMethodTokenResponse,
+            >,
+        >,
+    >
+    for RouterDataV2<
+        PaymentMethodToken,
+        PaymentFlowData,
+        PaymentMethodTokenizationData<T>,
+        PaymentMethodTokenResponse,
+    >
+{
+    type Error = error_stack::Report<errors::ConnectorError>;
+
+    fn try_from(
+        item: ResponseRouterData<
+            responses::{{CONNECTOR_NAME_PASCAL}}PaymentMethodTokenResponse,
+            RouterDataV2<
+                PaymentMethodToken,
+                PaymentFlowData,
+                PaymentMethodTokenizationData<T>,
+                PaymentMethodTokenResponse,
+            >,
+        >,
+    ) -> Result<Self, Self::Error> {
+        Ok(item.router_data)
+    }
+}
+
+impl<T: PaymentMethodDataTypes + Debug + Sync + Send + 'static + Serialize>
+    TryFrom<
+        ResponseRouterData<
+            responses::{{CONNECTOR_NAME_PASCAL}}SetupMandateResponse,
+            RouterDataV2<
+                SetupMandate,
+                PaymentFlowData,
+                SetupMandateRequestData<T>,
+                PaymentsResponseData,
+            >,
+        >,
+    >
+    for RouterDataV2<
+        SetupMandate,
+        PaymentFlowData,
+        SetupMandateRequestData<T>,
+        PaymentsResponseData,
+    >
+{
+    type Error = error_stack::Report<errors::ConnectorError>;
+
+    fn try_from(
+        item: ResponseRouterData<
+            responses::{{CONNECTOR_NAME_PASCAL}}SetupMandateResponse,
+            RouterDataV2<
+                SetupMandate,
+                PaymentFlowData,
+                SetupMandateRequestData<T>,
+                PaymentsResponseData,
+            >,
+        >,
+    ) -> Result<Self, Self::Error> {
+        Ok(item.router_data)
+    }
+}
+
+impl TryFrom<
+        ResponseRouterData<
+            responses::{{CONNECTOR_NAME_PASCAL}}RepeatPaymentResponse,
+            RouterDataV2<
+                RepeatPayment,
+                PaymentFlowData,
+                RepeatPaymentData,
+                PaymentsResponseData,
+            >,
+        >,
+    >
+    for RouterDataV2<
+        RepeatPayment,
+        PaymentFlowData,
+        RepeatPaymentData,
+        PaymentsResponseData,
+    >
+{
+    type Error = error_stack::Report<errors::ConnectorError>;
+
+    fn try_from(
+        item: ResponseRouterData<
+            responses::{{CONNECTOR_NAME_PASCAL}}RepeatPaymentResponse,
+            RouterDataV2<
+                RepeatPayment,
+                PaymentFlowData,
+                RepeatPaymentData,
+                PaymentsResponseData,
+            >,
+        >,
+    ) -> Result<Self, Self::Error> {
+        Ok(item.router_data)
+    }
+}
+
+impl TryFrom<
+        ResponseRouterData<
+            responses::{{CONNECTOR_NAME_PASCAL}}AcceptDisputeResponse,
+            RouterDataV2<
+                Accept,
+                DisputeFlowData,
+                AcceptDisputeData,
+                DisputeResponseData,
+            >,
+        >,
+    >
+    for RouterDataV2<
+        Accept,
+        DisputeFlowData,
+        AcceptDisputeData,
+        DisputeResponseData,
+    >
+{
+    type Error = error_stack::Report<errors::ConnectorError>;
+
+    fn try_from(
+        item: ResponseRouterData<
+            responses::{{CONNECTOR_NAME_PASCAL}}AcceptDisputeResponse,
+            RouterDataV2<
+                Accept,
+                DisputeFlowData,
+                AcceptDisputeData,
+                DisputeResponseData,
+            >,
+        >,
+    ) -> Result<Self, Self::Error> {
+        Ok(item.router_data)
+    }
+}
+
+impl TryFrom<
+        ResponseRouterData<
+            responses::{{CONNECTOR_NAME_PASCAL}}SubmitEvidenceResponse,
+            RouterDataV2<
+                SubmitEvidence,
+                DisputeFlowData,
+                SubmitEvidenceData,
+                DisputeResponseData,
+            >,
+        >,
+    >
+    for RouterDataV2<
+        SubmitEvidence,
+        DisputeFlowData,
+        SubmitEvidenceData,
+        DisputeResponseData,
+    >
+{
+    type Error = error_stack::Report<errors::ConnectorError>;
+
+    fn try_from(
+        item: ResponseRouterData<
+            responses::{{CONNECTOR_NAME_PASCAL}}SubmitEvidenceResponse,
+            RouterDataV2<
+                SubmitEvidence,
+                DisputeFlowData,
+                SubmitEvidenceData,
+                DisputeResponseData,
+            >,
+        >,
+    ) -> Result<Self, Self::Error> {
+        Ok(item.router_data)
+    }
+}
+
+impl TryFrom<
+        ResponseRouterData<
+            responses::{{CONNECTOR_NAME_PASCAL}}DefendDisputeResponse,
+            RouterDataV2<
+                DefendDispute,
+                DisputeFlowData,
+                DisputeDefendData,
+                DisputeResponseData,
+            >,
+        >,
+    >
+    for RouterDataV2<
+        DefendDispute,
+        DisputeFlowData,
+        DisputeDefendData,
+        DisputeResponseData,
+    >
+{
+    type Error = error_stack::Report<errors::ConnectorError>;
+
+    fn try_from(
+        item: ResponseRouterData<
+            responses::{{CONNECTOR_NAME_PASCAL}}DefendDisputeResponse,
+            RouterDataV2<
+                DefendDispute,
+                DisputeFlowData,
+                DisputeDefendData,
+                DisputeResponseData,
+            >,
+        >,
+    ) -> Result<Self, Self::Error> {
+        Ok(item.router_data)
+    }
+}
+
+impl<T: PaymentMethodDataTypes + Debug + Sync + Send + 'static + Serialize>
+    TryFrom<
+        ResponseRouterData<
+            responses::{{CONNECTOR_NAME_PASCAL}}PreAuthenticateResponse,
+            RouterDataV2<
+                PreAuthenticate,
+                PaymentFlowData,
+                PaymentsPreAuthenticateData<T>,
+                PaymentsResponseData,
+            >,
+        >,
+    >
+    for RouterDataV2<
+        PreAuthenticate,
+        PaymentFlowData,
+        PaymentsPreAuthenticateData<T>,
+        PaymentsResponseData,
+    >
+{
+    type Error = error_stack::Report<errors::ConnectorError>;
+
+    fn try_from(
+        item: ResponseRouterData<
+            responses::{{CONNECTOR_NAME_PASCAL}}PreAuthenticateResponse,
+            RouterDataV2<
+                PreAuthenticate,
+                PaymentFlowData,
+                PaymentsPreAuthenticateData<T>,
+                PaymentsResponseData,
+            >,
+        >,
+    ) -> Result<Self, Self::Error> {
+        Ok(item.router_data)
+    }
+}
+
+impl<T: PaymentMethodDataTypes + Debug + Sync + Send + 'static + Serialize>
+    TryFrom<
+        ResponseRouterData<
+            responses::{{CONNECTOR_NAME_PASCAL}}AuthenticateResponse,
+            RouterDataV2<
+                Authenticate,
+                PaymentFlowData,
+                PaymentsAuthenticateData<T>,
+                PaymentsResponseData,
+            >,
+        >,
+    >
+    for RouterDataV2<
+        Authenticate,
+        PaymentFlowData,
+        PaymentsAuthenticateData<T>,
+        PaymentsResponseData,
+    >
+{
+    type Error = error_stack::Report<errors::ConnectorError>;
+
+    fn try_from(
+        item: ResponseRouterData<
+            responses::{{CONNECTOR_NAME_PASCAL}}AuthenticateResponse,
+            RouterDataV2<
+                Authenticate,
+                PaymentFlowData,
+                PaymentsAuthenticateData<T>,
+                PaymentsResponseData,
+            >,
+        >,
+    ) -> Result<Self, Self::Error> {
+        Ok(item.router_data)
+    }
+}
+
+impl<T: PaymentMethodDataTypes + Debug + Sync + Send + 'static + Serialize>
+    TryFrom<
+        ResponseRouterData<
+            responses::{{CONNECTOR_NAME_PASCAL}}PostAuthenticateResponse,
+            RouterDataV2<
+                PostAuthenticate,
+                PaymentFlowData,
+                PaymentsPostAuthenticateData<T>,
+                PaymentsResponseData,
+            >,
+        >,
+    >
+    for RouterDataV2<
+        PostAuthenticate,
+        PaymentFlowData,
+        PaymentsPostAuthenticateData<T>,
+        PaymentsResponseData,
+    >
+{
+    type Error = error_stack::Report<errors::ConnectorError>;
+
+    fn try_from(
+        item: ResponseRouterData<
+            responses::{{CONNECTOR_NAME_PASCAL}}PostAuthenticateResponse,
+            RouterDataV2<
+                PostAuthenticate,
+                PaymentFlowData,
+                PaymentsPostAuthenticateData<T>,
+                PaymentsResponseData,
+            >,
+        >,
+    ) -> Result<Self, Self::Error> {
+        Ok(item.router_data)
+    }
+}
+
+impl TryFrom<
+        super::{{CONNECTOR_NAME_PASCAL}}RouterData<
+            RouterDataV2<
+                CreateOrder,
+                PaymentFlowData,
+                PaymentCreateOrderData,
+                PaymentCreateOrderResponse,
+            >,
+        >,
+    > for requests::{{CONNECTOR_NAME_PASCAL}}CreateOrderRequest
+{
+    type Error = error_stack::Report<errors::ConnectorError>;
+
+    fn try_from(
+        item: super::{{CONNECTOR_NAME_PASCAL}}RouterData<
+            RouterDataV2<
+                CreateOrder,
+                PaymentFlowData,
+                PaymentCreateOrderData,
+                PaymentCreateOrderResponse,
+            >,
+        >,
+    ) -> Result<Self, Self::Error> {
+        let _item = item.router_data;
+        Err(errors::ConnectorError::NotImplemented("CreateOrder flow not implemented".to_string()).into())
+    }
+}
+
+impl TryFrom<
+        super::{{CONNECTOR_NAME_PASCAL}}RouterData<
+            RouterDataV2<
+                CreateSessionToken,
+                PaymentFlowData,
+                SessionTokenRequestData,
+                SessionTokenResponseData,
+            >,
+        >,
+    > for requests::{{CONNECTOR_NAME_PASCAL}}CreateSessionTokenRequest
+{
+    type Error = error_stack::Report<errors::ConnectorError>;
+
+    fn try_from(
+        item: super::{{CONNECTOR_NAME_PASCAL}}RouterData<
+            RouterDataV2<
+                CreateSessionToken,
+                PaymentFlowData,
+                SessionTokenRequestData,
+                SessionTokenResponseData,
+            >,
+        >,
+    ) -> Result<Self, Self::Error> {
+        let _item = item.router_data;
+        Err(errors::ConnectorError::NotImplemented("CreateSessionToken flow not implemented".to_string()).into())
+    }
+}
+
+impl TryFrom<
+        super::{{CONNECTOR_NAME_PASCAL}}RouterData<
+            RouterDataV2<
+                CreateAccessToken,
+                PaymentFlowData,
+                AccessTokenRequestData,
+                AccessTokenResponseData,
+            >,
+        >,
+    > for requests::{{CONNECTOR_NAME_PASCAL}}CreateAccessTokenRequest
+{
+    type Error = error_stack::Report<errors::ConnectorError>;
+
+    fn try_from(
+        item: super::{{CONNECTOR_NAME_PASCAL}}RouterData<
+            RouterDataV2<
+                CreateAccessToken,
+                PaymentFlowData,
+                AccessTokenRequestData,
+                AccessTokenResponseData,
+            >,
+        >,
+    ) -> Result<Self, Self::Error> {
+        let _item = item.router_data;
+        Err(errors::ConnectorError::NotImplemented("CreateAccessToken flow not implemented".to_string()).into())
+    }
+}
+
+impl TryFrom<
+        super::{{CONNECTOR_NAME_PASCAL}}RouterData<
+            RouterDataV2<
+                CreateConnectorCustomer,
+                PaymentFlowData,
+                ConnectorCustomerData,
+                ConnectorCustomerResponse,
+            >,
+        >,
+    > for requests::{{CONNECTOR_NAME_PASCAL}}CreateConnectorCustomerRequest
+{
+    type Error = error_stack::Report<errors::ConnectorError>;
+
+    fn try_from(
+        item: super::{{CONNECTOR_NAME_PASCAL}}RouterData<
+            RouterDataV2<
+                CreateConnectorCustomer,
+                PaymentFlowData,
+                ConnectorCustomerData,
+                ConnectorCustomerResponse,
+            >,
+        >,
+    ) -> Result<Self, Self::Error> {
+        let _item = item.router_data;
+        Err(errors::ConnectorError::NotImplemented("CreateConnectorCustomer flow not implemented".to_string()).into())
+    }
+}
+
+impl<T: PaymentMethodDataTypes + Debug + Sync + Send + 'static + Serialize>
+    TryFrom<
+        super::{{CONNECTOR_NAME_PASCAL}}RouterData<
+            RouterDataV2<
+                PaymentMethodToken,
+                PaymentFlowData,
+                PaymentMethodTokenizationData<T>,
+                PaymentMethodTokenResponse,
+            >,
+            T,
+        >,
+    > for requests::{{CONNECTOR_NAME_PASCAL}}PaymentMethodTokenRequest
+{
+    type Error = error_stack::Report<errors::ConnectorError>;
+
+    fn try_from(
+        item: super::{{CONNECTOR_NAME_PASCAL}}RouterData<
+            RouterDataV2<
+                PaymentMethodToken,
+                PaymentFlowData,
+                PaymentMethodTokenizationData<T>,
+                PaymentMethodTokenResponse,
+            >,
+            T,
+        >,
+    ) -> Result<Self, Self::Error> {
+        let _item = item.router_data;
+        Err(errors::ConnectorError::NotImplemented("PaymentMethodToken flow not implemented".to_string()).into())
+    }
+}
+
+impl<T: PaymentMethodDataTypes + Debug + Sync + Send + 'static + Serialize>
+    TryFrom<
+        super::{{CONNECTOR_NAME_PASCAL}}RouterData<
+            RouterDataV2<
+                SetupMandate,
+                PaymentFlowData,
+                SetupMandateRequestData<T>,
+                PaymentsResponseData,
+            >,
+            T,
+        >,
+    > for requests::{{CONNECTOR_NAME_PASCAL}}SetupMandateRequest
+{
+    type Error = error_stack::Report<errors::ConnectorError>;
+
+    fn try_from(
+        item: super::{{CONNECTOR_NAME_PASCAL}}RouterData<
+            RouterDataV2<
+                SetupMandate,
+                PaymentFlowData,
+                SetupMandateRequestData<T>,
+                PaymentsResponseData,
+            >,
+            T,
+        >,
+    ) -> Result<Self, Self::Error> {
+        let _item = item.router_data;
+        Err(errors::ConnectorError::NotImplemented("SetupMandate flow not implemented".to_string()).into())
+    }
+}
+
+impl TryFrom<
+        super::{{CONNECTOR_NAME_PASCAL}}RouterData<
+            RouterDataV2<
+                RepeatPayment,
+                PaymentFlowData,
+                RepeatPaymentData,
+                PaymentsResponseData,
+            >,
+        >,
+    > for requests::{{CONNECTOR_NAME_PASCAL}}RepeatPaymentRequest
+{
+    type Error = error_stack::Report<errors::ConnectorError>;
+
+    fn try_from(
+        item: super::{{CONNECTOR_NAME_PASCAL}}RouterData<
+            RouterDataV2<
+                RepeatPayment,
+                PaymentFlowData,
+                RepeatPaymentData,
+                PaymentsResponseData,
+            >,
+        >,
+    ) -> Result<Self, Self::Error> {
+        let _item = item.router_data;
+        Err(errors::ConnectorError::NotImplemented("RepeatPayment flow not implemented".to_string()).into())
+    }
+}
+
+impl TryFrom<
+        super::{{CONNECTOR_NAME_PASCAL}}RouterData<
+            RouterDataV2<
+                Accept,
+                DisputeFlowData,
+                AcceptDisputeData,
+                DisputeResponseData,
+            >,
+        >,
+    > for requests::{{CONNECTOR_NAME_PASCAL}}AcceptDisputeRequest
+{
+    type Error = error_stack::Report<errors::ConnectorError>;
+
+    fn try_from(
+        item: super::{{CONNECTOR_NAME_PASCAL}}RouterData<
+            RouterDataV2<
+                Accept,
+                DisputeFlowData,
+                AcceptDisputeData,
+                DisputeResponseData,
+            >,
+        >,
+    ) -> Result<Self, Self::Error> {
+        let _item = item.router_data;
+        Err(errors::ConnectorError::NotImplemented("AcceptDispute flow not implemented".to_string()).into())
+    }
+}
+
+impl TryFrom<
+        super::{{CONNECTOR_NAME_PASCAL}}RouterData<
+            RouterDataV2<
+                SubmitEvidence,
+                DisputeFlowData,
+                SubmitEvidenceData,
+                DisputeResponseData,
+            >,
+        >,
+    > for requests::{{CONNECTOR_NAME_PASCAL}}SubmitEvidenceRequest
+{
+    type Error = error_stack::Report<errors::ConnectorError>;
+
+    fn try_from(
+        item: super::{{CONNECTOR_NAME_PASCAL}}RouterData<
+            RouterDataV2<
+                SubmitEvidence,
+                DisputeFlowData,
+                SubmitEvidenceData,
+                DisputeResponseData,
+            >,
+        >,
+    ) -> Result<Self, Self::Error> {
+        let _item = item.router_data;
+        Err(errors::ConnectorError::NotImplemented("SubmitEvidence flow not implemented".to_string()).into())
+    }
+}
+
+impl TryFrom<
+        super::{{CONNECTOR_NAME_PASCAL}}RouterData<
+            RouterDataV2<
+                DefendDispute,
+                DisputeFlowData,
+                DisputeDefendData,
+                DisputeResponseData,
+            >,
+        >,
+    > for requests::{{CONNECTOR_NAME_PASCAL}}DefendDisputeRequest
+{
+    type Error = error_stack::Report<errors::ConnectorError>;
+
+    fn try_from(
+        item: super::{{CONNECTOR_NAME_PASCAL}}RouterData<
+            RouterDataV2<
+                DefendDispute,
+                DisputeFlowData,
+                DisputeDefendData,
+                DisputeResponseData,
+            >,
+        >,
+    ) -> Result<Self, Self::Error> {
+        let _item = item.router_data;
+        Err(errors::ConnectorError::NotImplemented("DefendDispute flow not implemented".to_string()).into())
+    }
+}
+
+impl<T: PaymentMethodDataTypes + Debug + Sync + Send + 'static + Serialize>
+    TryFrom<
+        super::{{CONNECTOR_NAME_PASCAL}}RouterData<
+            RouterDataV2<
+                PreAuthenticate,
+                PaymentFlowData,
+                PaymentsPreAuthenticateData<T>,
+                PaymentsResponseData,
+            >,
+            T,
+        >,
+    > for requests::{{CONNECTOR_NAME_PASCAL}}PreAuthenticateRequest
+{
+    type Error = error_stack::Report<errors::ConnectorError>;
+
+    fn try_from(
+        item: super::{{CONNECTOR_NAME_PASCAL}}RouterData<
+            RouterDataV2<
+                PreAuthenticate,
+                PaymentFlowData,
+                PaymentsPreAuthenticateData<T>,
+                PaymentsResponseData,
+            >,
+            T,
+        >,
+    ) -> Result<Self, Self::Error> {
+        let _item = item.router_data;
+        Err(errors::ConnectorError::NotImplemented("PreAuthenticate flow not implemented".to_string()).into())
+    }
+}
+
+impl<T: PaymentMethodDataTypes + Debug + Sync + Send + 'static + Serialize>
+    TryFrom<
+        super::{{CONNECTOR_NAME_PASCAL}}RouterData<
+            RouterDataV2<
+                Authenticate,
+                PaymentFlowData,
+                PaymentsAuthenticateData<T>,
+                PaymentsResponseData,
+            >,
+            T,
+        >,
+    > for requests::{{CONNECTOR_NAME_PASCAL}}AuthenticateRequest
+{
+    type Error = error_stack::Report<errors::ConnectorError>;
+
+    fn try_from(
+        item: super::{{CONNECTOR_NAME_PASCAL}}RouterData<
+            RouterDataV2<
+                Authenticate,
+                PaymentFlowData,
+                PaymentsAuthenticateData<T>,
+                PaymentsResponseData,
+            >,
+            T,
+        >,
+    ) -> Result<Self, Self::Error> {
+        let _item = item.router_data;
+        Err(errors::ConnectorError::NotImplemented("Authenticate flow not implemented".to_string()).into())
+    }
+}
+
+impl<T: PaymentMethodDataTypes + Debug + Sync + Send + 'static + Serialize>
+    TryFrom<
+        super::{{CONNECTOR_NAME_PASCAL}}RouterData<
+            RouterDataV2<
+                PostAuthenticate,
+                PaymentFlowData,
+                PaymentsPostAuthenticateData<T>,
+                PaymentsResponseData,
+            >,
+            T,
+        >,
+    > for requests::{{CONNECTOR_NAME_PASCAL}}PostAuthenticateRequest
+{
+    type Error = error_stack::Report<errors::ConnectorError>;
+
+    fn try_from(
+        item: super::{{CONNECTOR_NAME_PASCAL}}RouterData<
+            RouterDataV2<
+                PostAuthenticate,
+                PaymentFlowData,
+                PaymentsPostAuthenticateData<T>,
+                PaymentsResponseData,
+            >,
+            T,
+        >,
+    ) -> Result<Self, Self::Error> {
+        let _item = item.router_data;
+        Err(errors::ConnectorError::NotImplemented("PostAuthenticate flow not implemented".to_string()).into())
+    }
+}

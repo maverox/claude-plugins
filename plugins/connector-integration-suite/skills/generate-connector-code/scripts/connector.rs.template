@@ -1,0 +1,733 @@
+mod requests;
+mod responses;
+pub mod transformers;
+
+use std::fmt::Debug;
+
+use common_enums::CurrencyUnit;
+use common_utils::{errors::CustomResult, events, ext_traits::ByteSliceExt, request::RequestContent};
+use domain_types::{
+    connector_flow::{
+        Accept, Authenticate, Authorize, Capture, CreateAccessToken, CreateConnectorCustomer,
+        CreateOrder, CreateSessionToken, DefendDispute, PaymentMethodToken, PostAuthenticate,
+        PreAuthenticate, PSync, RSync, Refund, RepeatPayment, SetupMandate, SubmitEvidence, Void,
+        VoidPC,
+    },
+    connector_types::{
+        AcceptDisputeData, AccessTokenRequestData, AccessTokenResponseData, ConnectorCustomerData,
+        ConnectorCustomerResponse, DisputeDefendData, DisputeFlowData, DisputeResponseData,
+        PaymentCreateOrderData, PaymentCreateOrderResponse, PaymentFlowData,
+        PaymentMethodTokenizationData, PaymentMethodTokenResponse, PaymentsAuthenticateData,
+        PaymentsAuthorizeData, PaymentsCancelPostCaptureData, PaymentsCaptureData,
+        PaymentsPostAuthenticateData, PaymentsPreAuthenticateData, PaymentsResponseData,
+        PaymentsSyncData, PaymentVoidData, RefundFlowData, RefundSyncData, RefundsData,
+        RefundsResponseData, RepeatPaymentData, SessionTokenRequestData, SessionTokenResponseData,
+        SetupMandateRequestData, SubmitEvidenceData,
+    },
+    errors,
+    payment_method_data::PaymentMethodDataTypes,
+    router_data::{ConnectorAuthType, ErrorResponse},
+    router_data_v2::RouterDataV2,
+    router_response_types::Response,
+    types::Connectors,
+};
+use error_stack::ResultExt;
+use hyperswitch_masking::{ExposeInterface, Mask, Maskable, PeekInterface};
+use interfaces::{
+    api::ConnectorCommon, connector_integration_v2::ConnectorIntegrationV2, connector_types,
+};
+use serde::Serialize;
+use transformers as {{CONNECTOR_NAME_SNAKE}};
+
+use requests::{
+    {{CONNECTOR_NAME_PASCAL}}CaptureRequest, {{CONNECTOR_NAME_PASCAL}}PaymentsRequest,
+    {{CONNECTOR_NAME_PASCAL}}RefundRequest, {{CONNECTOR_NAME_PASCAL}}VoidRequest,
+    {{CONNECTOR_NAME_PASCAL}}CreateOrderRequest, {{CONNECTOR_NAME_PASCAL}}CreateSessionTokenRequest,
+    {{CONNECTOR_NAME_PASCAL}}CreateAccessTokenRequest, {{CONNECTOR_NAME_PASCAL}}CreateConnectorCustomerRequest,
+    {{CONNECTOR_NAME_PASCAL}}PaymentMethodTokenRequest, {{CONNECTOR_NAME_PASCAL}}SetupMandateRequest,
+    {{CONNECTOR_NAME_PASCAL}}RepeatPaymentRequest, {{CONNECTOR_NAME_PASCAL}}AcceptDisputeRequest,
+    {{CONNECTOR_NAME_PASCAL}}SubmitEvidenceRequest, {{CONNECTOR_NAME_PASCAL}}DefendDisputeRequest,
+    {{CONNECTOR_NAME_PASCAL}}PreAuthenticateRequest, {{CONNECTOR_NAME_PASCAL}}AuthenticateRequest,
+    {{CONNECTOR_NAME_PASCAL}}PostAuthenticateRequest,
+};
+use responses::{
+    {{CONNECTOR_NAME_PASCAL}}AuthorizeResponse, {{CONNECTOR_NAME_PASCAL}}CaptureResponse,
+    {{CONNECTOR_NAME_PASCAL}}RefundResponse, {{CONNECTOR_NAME_PASCAL}}RsyncResponse,
+    {{CONNECTOR_NAME_PASCAL}}TransactionResponse, {{CONNECTOR_NAME_PASCAL}}VoidResponse,
+    {{CONNECTOR_NAME_PASCAL}}CreateOrderResponse, {{CONNECTOR_NAME_PASCAL}}CreateSessionTokenResponse,
+    {{CONNECTOR_NAME_PASCAL}}CreateAccessTokenResponse, {{CONNECTOR_NAME_PASCAL}}CreateConnectorCustomerResponse,
+    {{CONNECTOR_NAME_PASCAL}}PaymentMethodTokenResponse, {{CONNECTOR_NAME_PASCAL}}SetupMandateResponse,
+    {{CONNECTOR_NAME_PASCAL}}RepeatPaymentResponse, {{CONNECTOR_NAME_PASCAL}}AcceptDisputeResponse,
+    {{CONNECTOR_NAME_PASCAL}}SubmitEvidenceResponse, {{CONNECTOR_NAME_PASCAL}}DefendDisputeResponse,
+    {{CONNECTOR_NAME_PASCAL}}PreAuthenticateResponse, {{CONNECTOR_NAME_PASCAL}}AuthenticateResponse,
+    {{CONNECTOR_NAME_PASCAL}}PostAuthenticateResponse,
+};
+
+use super::macros;
+use crate::{types::ResponseRouterData, with_error_response_body};
+
+pub(crate) mod headers {
+    pub(crate) const CONTENT_TYPE: &str = "Content-Type";
+    pub(crate) const AUTHORIZATION: &str = "Authorization";
+}
+
+macros::create_all_prerequisites!(
+    connector_name: {{CONNECTOR_NAME_PASCAL}},
+    generic_type: T,
+    api: [
+        (
+            flow: Authorize,
+            request_body: {{CONNECTOR_NAME_PASCAL}}PaymentsRequest<T>,
+            response_body: {{CONNECTOR_NAME_PASCAL}}AuthorizeResponse,
+            router_data: RouterDataV2<Authorize, PaymentFlowData, PaymentsAuthorizeData<T>, PaymentsResponseData>,
+        ),
+        (
+            flow: Capture,
+            request_body: {{CONNECTOR_NAME_PASCAL}}CaptureRequest,
+            response_body: {{CONNECTOR_NAME_PASCAL}}CaptureResponse,
+            router_data: RouterDataV2<Capture, PaymentFlowData, PaymentsCaptureData, PaymentsResponseData>,
+        ),
+        (
+            flow: Void,
+            request_body: {{CONNECTOR_NAME_PASCAL}}VoidRequest,
+            response_body: {{CONNECTOR_NAME_PASCAL}}VoidResponse,
+            router_data: RouterDataV2<Void, PaymentFlowData, PaymentVoidData, PaymentsResponseData>,
+        ),
+        (
+            flow: PSync,
+            response_body: {{CONNECTOR_NAME_PASCAL}}TransactionResponse,
+            router_data: RouterDataV2<PSync, PaymentFlowData, PaymentsSyncData, PaymentsResponseData>,
+        ),
+        (
+            flow: Refund,
+            request_body: {{CONNECTOR_NAME_PASCAL}}RefundRequest,
+            response_body: {{CONNECTOR_NAME_PASCAL}}RefundResponse,
+            router_data: RouterDataV2<Refund, RefundFlowData, RefundsData, RefundsResponseData>,
+        ),
+        (
+            flow: RSync,
+            response_body: {{CONNECTOR_NAME_PASCAL}}RsyncResponse,
+            router_data: RouterDataV2<RSync, RefundFlowData, RefundSyncData, RefundsResponseData>,
+        ),
+        (
+            flow: CreateOrder,
+            request_body: {{CONNECTOR_NAME_PASCAL}}CreateOrderRequest,
+            response_body: {{CONNECTOR_NAME_PASCAL}}CreateOrderResponse,
+            router_data: RouterDataV2<CreateOrder, PaymentFlowData, PaymentCreateOrderData, PaymentCreateOrderResponse>,
+        ),
+        (
+            flow: CreateSessionToken,
+            request_body: {{CONNECTOR_NAME_PASCAL}}CreateSessionTokenRequest,
+            response_body: {{CONNECTOR_NAME_PASCAL}}CreateSessionTokenResponse,
+            router_data: RouterDataV2<CreateSessionToken, PaymentFlowData, SessionTokenRequestData, SessionTokenResponseData>,
+        ),
+        (
+            flow: CreateAccessToken,
+            request_body: {{CONNECTOR_NAME_PASCAL}}CreateAccessTokenRequest,
+            response_body: {{CONNECTOR_NAME_PASCAL}}CreateAccessTokenResponse,
+            router_data: RouterDataV2<CreateAccessToken, PaymentFlowData, AccessTokenRequestData, AccessTokenResponseData>,
+        ),
+        (
+            flow: CreateConnectorCustomer,
+            request_body: {{CONNECTOR_NAME_PASCAL}}CreateConnectorCustomerRequest,
+            response_body: {{CONNECTOR_NAME_PASCAL}}CreateConnectorCustomerResponse,
+            router_data: RouterDataV2<CreateConnectorCustomer, PaymentFlowData, ConnectorCustomerData, ConnectorCustomerResponse>,
+        ),
+        (
+            flow: PaymentMethodToken,
+            request_body: {{CONNECTOR_NAME_PASCAL}}PaymentMethodTokenRequest,
+            response_body: {{CONNECTOR_NAME_PASCAL}}PaymentMethodTokenResponse,
+            router_data: RouterDataV2<PaymentMethodToken, PaymentFlowData, PaymentMethodTokenizationData<T>, PaymentMethodTokenResponse>,
+        ),
+        (
+            flow: SetupMandate,
+            request_body: {{CONNECTOR_NAME_PASCAL}}SetupMandateRequest,
+            response_body: {{CONNECTOR_NAME_PASCAL}}SetupMandateResponse,
+            router_data: RouterDataV2<SetupMandate, PaymentFlowData, SetupMandateRequestData<T>, PaymentsResponseData>,
+        ),
+        (
+            flow: RepeatPayment,
+            request_body: {{CONNECTOR_NAME_PASCAL}}RepeatPaymentRequest,
+            response_body: {{CONNECTOR_NAME_PASCAL}}RepeatPaymentResponse,
+            router_data: RouterDataV2<RepeatPayment, PaymentFlowData, RepeatPaymentData, PaymentsResponseData>,
+        ),
+        (
+            flow: Accept,
+            request_body: {{CONNECTOR_NAME_PASCAL}}AcceptDisputeRequest,
+            response_body: {{CONNECTOR_NAME_PASCAL}}AcceptDisputeResponse,
+            router_data: RouterDataV2<Accept, DisputeFlowData, AcceptDisputeData, DisputeResponseData>,
+        ),
+        (
+            flow: SubmitEvidence,
+            request_body: {{CONNECTOR_NAME_PASCAL}}SubmitEvidenceRequest,
+            response_body: {{CONNECTOR_NAME_PASCAL}}SubmitEvidenceResponse,
+            router_data: RouterDataV2<SubmitEvidence, DisputeFlowData, SubmitEvidenceData, DisputeResponseData>,
+        ),
+        (
+            flow: DefendDispute,
+            request_body: {{CONNECTOR_NAME_PASCAL}}DefendDisputeRequest,
+            response_body: {{CONNECTOR_NAME_PASCAL}}DefendDisputeResponse,
+            router_data: RouterDataV2<DefendDispute, DisputeFlowData, DisputeDefendData, DisputeResponseData>,
+        ),
+        (
+            flow: PreAuthenticate,
+            request_body: {{CONNECTOR_NAME_PASCAL}}PreAuthenticateRequest,
+            response_body: {{CONNECTOR_NAME_PASCAL}}PreAuthenticateResponse,
+            router_data: RouterDataV2<PreAuthenticate, PaymentFlowData, PaymentsPreAuthenticateData<T>, PaymentsResponseData>,
+        ),
+        (
+            flow: Authenticate,
+            request_body: {{CONNECTOR_NAME_PASCAL}}AuthenticateRequest,
+            response_body: {{CONNECTOR_NAME_PASCAL}}AuthenticateResponse,
+            router_data: RouterDataV2<Authenticate, PaymentFlowData, PaymentsAuthenticateData<T>, PaymentsResponseData>,
+        ),
+        (
+            flow: PostAuthenticate,
+            request_body: {{CONNECTOR_NAME_PASCAL}}PostAuthenticateRequest,
+            response_body: {{CONNECTOR_NAME_PASCAL}}PostAuthenticateResponse,
+            router_data: RouterDataV2<PostAuthenticate, PaymentFlowData, PaymentsPostAuthenticateData<T>, PaymentsResponseData>,
+        )
+    ],
+    amount_converters: [],
+    member_functions: {
+        pub fn build_headers<F, FCD, Req, Res>(
+            &self,
+            req: &RouterDataV2<F, FCD, Req, Res>,
+        ) -> CustomResult<Vec<(String, Maskable<String>)>, errors::ConnectorError>
+        where
+            Self: ConnectorIntegrationV2<F, FCD, Req, Res>,
+        {
+            let mut header = vec![(
+                headers::CONTENT_TYPE.to_string(),
+                self.common_get_content_type().to_string().into(),
+            )];
+            let mut auth_header = self.get_auth_header(&req.connector_auth_type)?;
+            header.append(&mut auth_header);
+            Ok(header)
+        }
+
+        pub fn connector_base_url_payments<'a, F, Req, Res>(
+            &self,
+            req: &'a RouterDataV2<F, PaymentFlowData, Req, Res>,
+        ) -> &'a str {
+            "{{BASE_URL}}"
+        }
+
+        pub fn connector_base_url_refunds<'a, F, Req, Res>(
+            &self,
+            req: &'a RouterDataV2<F, RefundFlowData, Req, Res>,
+        ) -> &'a str {
+            &req.resource_common_data.connectors.{{CONNECTOR_NAME_SNAKE}}.base_url
+        }
+
+        pub fn build_headers<F, D, Req, Res>(
+            &self,
+            req: &RouterDataV2<F, D, Req, Res>,
+        ) -> CustomResult<Vec<(String, Maskable<String>)>, errors::ConnectorError> {
+            self.get_auth_header(&req.connector_auth_type)
+        }
+    }
+);
+
+macros::macro_connector_implementation!(
+    connector_default_implementations: [get_content_type, get_error_response_v2],
+    connector: {{CONNECTOR_NAME_PASCAL}},
+    curl_request: Json({{CONNECTOR_NAME_PASCAL}}PaymentsRequest<T>),
+    curl_response: {{CONNECTOR_NAME_PASCAL}}AuthorizeResponse,
+    flow_name: Authorize,
+    resource_common_data: PaymentFlowData,
+    flow_request: PaymentsAuthorizeData<T>,
+    flow_response: PaymentsResponseData,
+    http_method: Post,
+    generic_type: T,
+    [PaymentMethodDataTypes + Debug + Sync + Send + 'static + Serialize],
+    other_functions: {
+        fn get_headers(
+            &self,
+            req: &RouterDataV2<Authorize, PaymentFlowData, PaymentsAuthorizeData<T>, PaymentsResponseData>,
+        ) -> CustomResult<Vec<(String, Maskable<String>)>, errors::ConnectorError> {
+            self.build_headers(req)
+        }
+
+        fn get_url(
+            &self,
+            req: &RouterDataV2<Authorize, PaymentFlowData, PaymentsAuthorizeData<T>, PaymentsResponseData>,
+        ) -> CustomResult<String, errors::ConnectorError> {
+            Ok(format!("{}/payments", self.connector_base_url_payments(req)))
+        }
+    }
+);
+
+macros::macro_connector_implementation!(
+    connector_default_implementations: [get_content_type, get_error_response_v2],
+    connector: {{CONNECTOR_NAME_PASCAL}},
+    curl_request: Json({{CONNECTOR_NAME_PASCAL}}CaptureRequest),
+    curl_response: {{CONNECTOR_NAME_PASCAL}}CaptureResponse,
+    flow_name: Capture,
+    resource_common_data: PaymentFlowData,
+    flow_request: PaymentsCaptureData,
+    flow_response: PaymentsResponseData,
+    http_method: Post,
+    generic_type: T,
+    [PaymentMethodDataTypes + Debug + Sync + Send + 'static + Serialize],
+    other_functions: {
+        fn get_headers(
+            &self,
+            req: &RouterDataV2<Capture, PaymentFlowData, PaymentsCaptureData, PaymentsResponseData>,
+        ) -> CustomResult<Vec<(String, Maskable<String>)>, errors::ConnectorError> {
+            self.build_headers(req)
+        }
+
+        fn get_url(
+            &self,
+            req: &RouterDataV2<Capture, PaymentFlowData, PaymentsCaptureData, PaymentsResponseData>,
+        ) -> CustomResult<String, errors::ConnectorError> {
+            Ok(format!("{}/captures", self.connector_base_url_payments(req)))
+        }
+    }
+);
+
+macros::macro_connector_implementation!(
+    connector_default_implementations: [get_content_type, get_error_response_v2],
+    connector: {{CONNECTOR_NAME_PASCAL}},
+    curl_request: Json({{CONNECTOR_NAME_PASCAL}}VoidRequest),
+    curl_response: {{CONNECTOR_NAME_PASCAL}}VoidResponse,
+    flow_name: Void,
+    resource_common_data: PaymentFlowData,
+    flow_request: PaymentVoidData,
+    flow_response: PaymentsResponseData,
+    http_method: Post,
+    generic_type: T,
+    [PaymentMethodDataTypes + Debug + Sync + Send + 'static + Serialize],
+    other_functions: {
+        fn get_headers(
+            &self,
+            req: &RouterDataV2<Void, PaymentFlowData, PaymentVoidData, PaymentsResponseData>,
+        ) -> CustomResult<Vec<(String, Maskable<String>)>, errors::ConnectorError> {
+            self.build_headers(req)
+        }
+
+        fn get_url(
+            &self,
+            req: &RouterDataV2<Void, PaymentFlowData, PaymentVoidData, PaymentsResponseData>,
+        ) -> CustomResult<String, errors::ConnectorError> {
+            Ok(format!("{}/voids", self.connector_base_url_payments(req)))
+        }
+    }
+);
+
+macros::macro_connector_implementation!(
+    connector_default_implementations: [get_content_type, get_error_response_v2],
+    connector: {{CONNECTOR_NAME_PASCAL}},
+    curl_response: {{CONNECTOR_NAME_PASCAL}}TransactionResponse,
+    flow_name: PSync,
+    resource_common_data: PaymentFlowData,
+    flow_request: PaymentsSyncData,
+    flow_response: PaymentsResponseData,
+    http_method: Get,
+    generic_type: T,
+    [PaymentMethodDataTypes + Debug + Sync + Send + 'static + Serialize],
+    other_functions: {
+        fn get_headers(
+            &self,
+            req: &RouterDataV2<PSync, PaymentFlowData, PaymentsSyncData, PaymentsResponseData>,
+        ) -> CustomResult<Vec<(String, Maskable<String>)>, errors::ConnectorError> {
+            self.build_headers(req)
+        }
+
+        fn get_url(
+            &self,
+            req: &RouterDataV2<PSync, PaymentFlowData, PaymentsSyncData, PaymentsResponseData>,
+        ) -> CustomResult<String, errors::ConnectorError> {
+            Ok(format!("{}/transactions", self.connector_base_url_payments(req)))
+        }
+    }
+);
+
+macros::macro_connector_implementation!(
+    connector_default_implementations: [get_content_type, get_error_response_v2],
+    connector: {{CONNECTOR_NAME_PASCAL}},
+    curl_request: Json({{CONNECTOR_NAME_PASCAL}}RefundRequest),
+    curl_response: {{CONNECTOR_NAME_PASCAL}}RefundResponse,
+    flow_name: Refund,
+    resource_common_data: RefundFlowData,
+    flow_request: RefundsData,
+    flow_response: RefundsResponseData,
+    http_method: Post,
+    generic_type: T,
+    [PaymentMethodDataTypes + Debug + Sync + Send + 'static + Serialize],
+    other_functions: {
+        fn get_headers(
+            &self,
+            req: &RouterDataV2<Refund, RefundFlowData, RefundsData, RefundsResponseData>,
+        ) -> CustomResult<Vec<(String, Maskable<String>)>, errors::ConnectorError> {
+            self.build_headers(req)
+        }
+
+        fn get_url(
+            &self,
+            req: &RouterDataV2<Refund, RefundFlowData, RefundsData, RefundsResponseData>,
+        ) -> CustomResult<String, errors::ConnectorError> {
+            Ok(format!("{}/refunds", self.connector_base_url_refunds(req)))
+        }
+    }
+);
+
+macros::macro_connector_implementation!(
+    connector_default_implementations: [get_content_type, get_error_response_v2],
+    connector: {{CONNECTOR_NAME_PASCAL}},
+    curl_response: {{CONNECTOR_NAME_PASCAL}}RsyncResponse,
+    flow_name: RSync,
+    resource_common_data: RefundFlowData,
+    flow_request: RefundSyncData,
+    flow_response: RefundsResponseData,
+    http_method: Get,
+    generic_type: T,
+    [PaymentMethodDataTypes + Debug + Sync + Send + 'static + Serialize],
+    other_functions: {
+        fn get_headers(
+            &self,
+            req: &RouterDataV2<RSync, RefundFlowData, RefundSyncData, RefundsResponseData>,
+        ) -> CustomResult<Vec<(String, Maskable<String>)>, errors::ConnectorError> {
+            self.build_headers(req)
+        }
+
+        fn get_url(
+            &self,
+            req: &RouterDataV2<RSync, RefundFlowData, RefundSyncData, RefundsResponseData>,
+        ) -> CustomResult<String, errors::ConnectorError> {
+            Ok(format!("{}/refunds", self.connector_base_url_refunds(req)))
+        }
+    }
+);
+
+// Implementations for missing flows
+macros::macro_connector_implementation!(
+    connector_default_implementations: [get_content_type, get_error_response_v2],
+    connector: {{CONNECTOR_NAME_PASCAL}},
+    curl_request: Json({{CONNECTOR_NAME_PASCAL}}CreateOrderRequest),
+    curl_response: {{CONNECTOR_NAME_PASCAL}}CreateOrderResponse,
+    flow_name: CreateOrder,
+    resource_common_data: PaymentFlowData,
+    flow_request: PaymentCreateOrderData,
+    flow_response: PaymentCreateOrderResponse,
+    http_method: Post,
+    generic_type: T,
+    [PaymentMethodDataTypes + Debug + Sync + Send + 'static + Serialize],
+    other_functions: {}
+);
+
+macros::macro_connector_implementation!(
+    connector_default_implementations: [get_content_type, get_error_response_v2],
+    connector: {{CONNECTOR_NAME_PASCAL}},
+    curl_request: Json({{CONNECTOR_NAME_PASCAL}}CreateSessionTokenRequest),
+    curl_response: {{CONNECTOR_NAME_PASCAL}}CreateSessionTokenResponse,
+    flow_name: CreateSessionToken,
+    resource_common_data: PaymentFlowData,
+    flow_request: SessionTokenRequestData,
+    flow_response: SessionTokenResponseData,
+    http_method: Post,
+    generic_type: T,
+    [PaymentMethodDataTypes + Debug + Sync + Send + 'static + Serialize],
+    other_functions: {}
+);
+
+macros::macro_connector_implementation!(
+    connector_default_implementations: [get_content_type, get_error_response_v2],
+    connector: {{CONNECTOR_NAME_PASCAL}},
+    curl_request: Json({{CONNECTOR_NAME_PASCAL}}CreateAccessTokenRequest),
+    curl_response: {{CONNECTOR_NAME_PASCAL}}CreateAccessTokenResponse,
+    flow_name: CreateAccessToken,
+    resource_common_data: PaymentFlowData,
+    flow_request: AccessTokenRequestData,
+    flow_response: AccessTokenResponseData,
+    http_method: Post,
+    generic_type: T,
+    [PaymentMethodDataTypes + Debug + Sync + Send + 'static + Serialize],
+    other_functions: {}
+);
+
+macros::macro_connector_implementation!(
+    connector_default_implementations: [get_content_type, get_error_response_v2],
+    connector: {{CONNECTOR_NAME_PASCAL}},
+    curl_request: Json({{CONNECTOR_NAME_PASCAL}}CreateConnectorCustomerRequest),
+    curl_response: {{CONNECTOR_NAME_PASCAL}}CreateConnectorCustomerResponse,
+    flow_name: CreateConnectorCustomer,
+    resource_common_data: PaymentFlowData,
+    flow_request: ConnectorCustomerData,
+    flow_response: ConnectorCustomerResponse,
+    http_method: Post,
+    generic_type: T,
+    [PaymentMethodDataTypes + Debug + Sync + Send + 'static + Serialize],
+    other_functions: {}
+);
+
+macros::macro_connector_implementation!(
+    connector_default_implementations: [get_content_type, get_error_response_v2],
+    connector: {{CONNECTOR_NAME_PASCAL}},
+    curl_request: Json({{CONNECTOR_NAME_PASCAL}}PaymentMethodTokenRequest),
+    curl_response: {{CONNECTOR_NAME_PASCAL}}PaymentMethodTokenResponse,
+    flow_name: PaymentMethodToken,
+    resource_common_data: PaymentFlowData,
+    flow_request: PaymentMethodTokenizationData<T>,
+    flow_response: PaymentMethodTokenResponse,
+    http_method: Post,
+    generic_type: T,
+    [PaymentMethodDataTypes + Debug + Sync + Send + 'static + Serialize],
+    other_functions: {}
+);
+
+macros::macro_connector_implementation!(
+    connector_default_implementations: [get_content_type, get_error_response_v2],
+    connector: {{CONNECTOR_NAME_PASCAL}},
+    curl_request: Json({{CONNECTOR_NAME_PASCAL}}SetupMandateRequest),
+    curl_response: {{CONNECTOR_NAME_PASCAL}}SetupMandateResponse,
+    flow_name: SetupMandate,
+    resource_common_data: PaymentFlowData,
+    flow_request: SetupMandateRequestData<T>,
+    flow_response: PaymentsResponseData,
+    http_method: Post,
+    generic_type: T,
+    [PaymentMethodDataTypes + Debug + Sync + Send + 'static + Serialize],
+    other_functions: {}
+);
+
+macros::macro_connector_implementation!(
+    connector_default_implementations: [get_content_type, get_error_response_v2],
+    connector: {{CONNECTOR_NAME_PASCAL}},
+    curl_request: Json({{CONNECTOR_NAME_PASCAL}}RepeatPaymentRequest),
+    curl_response: {{CONNECTOR_NAME_PASCAL}}RepeatPaymentResponse,
+    flow_name: RepeatPayment,
+    resource_common_data: PaymentFlowData,
+    flow_request: RepeatPaymentData,
+    flow_response: PaymentsResponseData,
+    http_method: Post,
+    generic_type: T,
+    [PaymentMethodDataTypes + Debug + Sync + Send + 'static + Serialize],
+    other_functions: {}
+);
+
+macros::macro_connector_implementation!(
+    connector_default_implementations: [get_content_type, get_error_response_v2],
+    connector: {{CONNECTOR_NAME_PASCAL}},
+    curl_request: Json({{CONNECTOR_NAME_PASCAL}}AcceptDisputeRequest),
+    curl_response: {{CONNECTOR_NAME_PASCAL}}AcceptDisputeResponse,
+    flow_name: Accept,
+    resource_common_data: DisputeFlowData,
+    flow_request: AcceptDisputeData,
+    flow_response: DisputeResponseData,
+    http_method: Post,
+    generic_type: T,
+    [PaymentMethodDataTypes + Debug + Sync + Send + 'static + Serialize],
+    other_functions: {}
+);
+
+macros::macro_connector_implementation!(
+    connector_default_implementations: [get_content_type, get_error_response_v2],
+    connector: {{CONNECTOR_NAME_PASCAL}},
+    curl_request: Json({{CONNECTOR_NAME_PASCAL}}SubmitEvidenceRequest),
+    curl_response: {{CONNECTOR_NAME_PASCAL}}SubmitEvidenceResponse,
+    flow_name: SubmitEvidence,
+    resource_common_data: DisputeFlowData,
+    flow_request: SubmitEvidenceData,
+    flow_response: DisputeResponseData,
+    http_method: Post,
+    generic_type: T,
+    [PaymentMethodDataTypes + Debug + Sync + Send + 'static + Serialize],
+    other_functions: {}
+);
+
+macros::macro_connector_implementation!(
+    connector_default_implementations: [get_content_type, get_error_response_v2],
+    connector: {{CONNECTOR_NAME_PASCAL}},
+    curl_request: Json({{CONNECTOR_NAME_PASCAL}}DefendDisputeRequest),
+    curl_response: {{CONNECTOR_NAME_PASCAL}}DefendDisputeResponse,
+    flow_name: DefendDispute,
+    resource_common_data: DisputeFlowData,
+    flow_request: DisputeDefendData,
+    flow_response: DisputeResponseData,
+    http_method: Post,
+    generic_type: T,
+    [PaymentMethodDataTypes + Debug + Sync + Send + 'static + Serialize],
+    other_functions: {}
+);
+
+macros::macro_connector_implementation!(
+    connector_default_implementations: [get_content_type, get_error_response_v2],
+    connector: {{CONNECTOR_NAME_PASCAL}},
+    curl_request: Json({{CONNECTOR_NAME_PASCAL}}PreAuthenticateRequest),
+    curl_response: {{CONNECTOR_NAME_PASCAL}}PreAuthenticateResponse,
+    flow_name: PreAuthenticate,
+    resource_common_data: PaymentFlowData,
+    flow_request: PaymentsPreAuthenticateData<T>,
+    flow_response: PaymentsResponseData,
+    http_method: Post,
+    generic_type: T,
+    [PaymentMethodDataTypes + Debug + Sync + Send + 'static + Serialize],
+    other_functions: {}
+);
+
+macros::macro_connector_implementation!(
+    connector_default_implementations: [get_content_type, get_error_response_v2],
+    connector: {{CONNECTOR_NAME_PASCAL}},
+    curl_request: Json({{CONNECTOR_NAME_PASCAL}}AuthenticateRequest),
+    curl_response: {{CONNECTOR_NAME_PASCAL}}AuthenticateResponse,
+    flow_name: Authenticate,
+    resource_common_data: PaymentFlowData,
+    flow_request: PaymentsAuthenticateData<T>,
+    flow_response: PaymentsResponseData,
+    http_method: Post,
+    generic_type: T,
+    [PaymentMethodDataTypes + Debug + Sync + Send + 'static + Serialize],
+    other_functions: {}
+);
+
+macros::macro_connector_implementation!(
+    connector_default_implementations: [get_content_type, get_error_response_v2],
+    connector: {{CONNECTOR_NAME_PASCAL}},
+    curl_request: Json({{CONNECTOR_NAME_PASCAL}}PostAuthenticateRequest),
+    curl_response: {{CONNECTOR_NAME_PASCAL}}PostAuthenticateResponse,
+    flow_name: PostAuthenticate,
+    resource_common_data: PaymentFlowData,
+    flow_request: PaymentsPostAuthenticateData<T>,
+    flow_response: PaymentsResponseData,
+    http_method: Post,
+    generic_type: T,
+    [PaymentMethodDataTypes + Debug + Sync + Send + 'static + Serialize],
+    other_functions: {}
+);
+
+// Implement ConnectorServiceTrait
+impl<T: PaymentMethodDataTypes + Debug + Sync + Send + 'static + Serialize>
+    connector_types::ConnectorServiceTrait<T> for {{CONNECTOR_NAME_PASCAL}}<T>
+{
+}
+
+impl<T: PaymentMethodDataTypes + Debug + Sync + Send + 'static + Serialize>
+    connector_types::ValidationTrait for {{CONNECTOR_NAME_PASCAL}}<T>
+{
+}
+
+impl<T: PaymentMethodDataTypes + Debug + Sync + Send + 'static + Serialize>
+    connector_types::IncomingWebhook for {{CONNECTOR_NAME_PASCAL}}<T>
+{
+}
+
+// Implement SourceVerification for all flows
+impl<T: PaymentMethodDataTypes + Debug + Sync + Send + 'static + Serialize>
+    interfaces::verification::SourceVerification<
+        Authorize,
+        PaymentFlowData,
+        PaymentsAuthorizeData<T>,
+        PaymentsResponseData,
+    > for {{CONNECTOR_NAME_PASCAL}}<T>
+{
+}
+
+impl<T: PaymentMethodDataTypes + Debug + Sync + Send + 'static + Serialize>
+    interfaces::verification::SourceVerification<
+        Capture,
+        PaymentFlowData,
+        PaymentsCaptureData,
+        PaymentsResponseData,
+    > for {{CONNECTOR_NAME_PASCAL}}<T>
+{
+}
+
+impl<T: PaymentMethodDataTypes + Debug + Sync + Send + 'static + Serialize>
+    interfaces::verification::SourceVerification<
+        Void,
+        PaymentFlowData,
+        PaymentVoidData,
+        PaymentsResponseData,
+    > for {{CONNECTOR_NAME_PASCAL}}<T>
+{
+}
+
+impl<T: PaymentMethodDataTypes + Debug + Sync + Send + 'static + Serialize>
+    interfaces::verification::SourceVerification<
+        PSync,
+        PaymentFlowData,
+        PaymentsSyncData,
+        PaymentsResponseData,
+    > for {{CONNECTOR_NAME_PASCAL}}<T>
+{
+}
+
+impl<T: PaymentMethodDataTypes + Debug + Sync + Send + 'static + Serialize>
+    interfaces::verification::SourceVerification<
+        Refund,
+        RefundFlowData,
+        RefundsData,
+        RefundsResponseData,
+    > for {{CONNECTOR_NAME_PASCAL}}<T>
+{
+}
+
+impl<T: PaymentMethodDataTypes + Debug + Sync + Send + 'static + Serialize>
+    interfaces::verification::SourceVerification<
+        RSync,
+        RefundFlowData,
+        RefundSyncData,
+        RefundsResponseData,
+    > for {{CONNECTOR_NAME_PASCAL}}<T>
+{
+}
+
+// Implement ConnectorCommon
+impl<T: PaymentMethodDataTypes + Debug + Sync + Send + 'static + Serialize> ConnectorCommon
+    for {{CONNECTOR_NAME_PASCAL}}<T>
+{
+    fn id(&self) -> &'static str {
+        "{{CONNECTOR_NAME_SNAKE}}"
+    }
+
+    fn get_currency_unit(&self) -> CurrencyUnit {
+        CurrencyUnit::Minor
+    }
+
+    fn common_get_content_type(&self) -> &'static str {
+        "application/json"
+    }
+
+    fn base_url<'a>(&self, _connectors: &'a Connectors) -> &'a str {
+        "{{BASE_URL}}"
+    }
+
+    fn get_auth_header(
+        &self,
+        auth_type: &ConnectorAuthType,
+    ) -> CustomResult<Vec<(String, Maskable<String>)>, errors::ConnectorError> {
+        let auth = {{CONNECTOR_NAME_SNAKE}}::{{CONNECTOR_NAME_PASCAL}}AuthType::try_from(auth_type)
+            .change_context(errors::ConnectorError::FailedToObtainAuthType)?;
+        Ok(vec![(
+            headers::AUTHORIZATION.to_string(),
+            auth.api_key.expose().into_masked(),
+        )])
+    }
+
+    fn build_error_response(
+        &self,
+        res: Response,
+        event_builder: Option<&mut events::Event>,
+    ) -> CustomResult<ErrorResponse, errors::ConnectorError> {
+        let response: {{CONNECTOR_NAME_SNAKE}}::{{CONNECTOR_NAME_PASCAL}}ErrorResponse = res
+            .response
+            .parse_struct("{{CONNECTOR_NAME_PASCAL}}ErrorResponse")
+            .change_context(errors::ConnectorError::ResponseDeserializationFailed)?;
+
+        with_error_response_body!(event_builder, response);
+
+        Ok(ErrorResponse {
+            status_code: res.status_code,
+            code: common_utils::consts::NO_ERROR_CODE.to_string(),
+            message: common_utils::consts::NO_ERROR_MESSAGE.to_string(),
+            reason: None,
+            attempt_status: None,
+            connector_transaction_id: None,
+            network_decline_code: None,
+            network_advice_code: None,
+            network_error_message: None,
+        })
+    }
+}
