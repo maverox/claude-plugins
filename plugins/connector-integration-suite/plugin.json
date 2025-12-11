@@ -21,6 +21,12 @@
         "./commands/connector-integrate.md",
         "./commands/pr-review.md"
     ],
-    "agents": "./agents/",
+    "agents": [
+        "./agents/connector-implementation.md",
+        "./agents/connector-planning.md",
+        "./agents/connector-research.md",
+        "./agents/connector-review.md",
+        "./agents/connector-testing.md"
+    ],
     "hooks": "./hooks/hooks.json"
 }
