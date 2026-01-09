@@ -384,7 +384,7 @@ Hardcoded API credentials detected. Credentials must never be committed to sourc
 
 **Current**:
 ```rust
-const API_KEY: &str = "sk_live_abc123...";
+const API_KEY: &str = "sk_live_EXAMPLE";
 ```
 
 **Suggested Fix**:

@@ -13,7 +13,7 @@
 
 **API Documentation Example**:
 ```
-Authorization: Bearer sk_test_abc123
+Authorization: Bearer sk_test_EXAMPLE
 ```
 
 **Implementation**:

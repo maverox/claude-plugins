@@ -72,7 +72,7 @@ grep -n "Command::new.*format!" src/**/*.rs
 
 **Vulnerable** (❌):
 ```rust
-const API_KEY: &str = "sk_live_abc123";  // VULNERABLE
+const API_KEY: &str = "sk_live_EXAMPLE";  // VULNERABLE
 const DATABASE_PASSWORD: &str = "password123";  // VULNERABLE
 
 fn connect() {

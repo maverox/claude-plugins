@@ -21,10 +21,10 @@ Guide for identifying and mapping connector authentication methods to UCS Connec
 #### Header Patterns
 ```bash
 # Pattern 1: x-api-key
-Header: x-api-key: sk_live_...
+Header: x-api-key: sk_live_EXAMPLE
 
 # Pattern 2: Authorization Bearer
-Header: Authorization: Bearer sk_live_...
+Header: Authorization: Bearer sk_live_EXAMPLE
 
 # Pattern 3: api-key
 Header: api-key: your_api_key
@@ -43,13 +43,13 @@ Header: X-MyService-Key: your_key
 - Simple to implement
 - No token refresh needed
 - Single credential type
-- Key may be prefixed (e.g., `sk_live_`, `pk_`)
+- Key may be prefixed (e.g., `sk_live_EXAMPLE`, `pk_`)
 
 #### Examples
 **Stripe**:
 ```bash
 curl https://api.stripe.com/v1/charges \
-  -u sk_test_...:  # API key as basic auth username
+  -u sk_test_EXAMPLE:  # API key as basic auth username
 ```
 **AWS (some services)**:
 ```bash
@@ -298,7 +298,7 @@ Headers:
 ```bash
 # HeaderKey Example
 curl https://api.example.com/payment \
-  -H "x-api-key: sk_test_..."  # ← Single header with key
+  -H "x-api-key: sk_test_EXAMPLE"  # ← Single header with key
 
 # CreateAccessToken Example
 curl https://api.example.com/payment \

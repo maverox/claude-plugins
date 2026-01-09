@@ -398,7 +398,7 @@ let auth = AuthType::try_from(&router_data.connector_auth_type)?;
 **MUST NOT USE** (❌):
 ```rust
 // Hardcoded credentials
-const API_KEY: &str = "sk_live_123...";  // CRITICAL VIOLATION
+const API_KEY: &str = "sk_live_EXAMPLE";  // CRITICAL VIOLATION
 
 // From environment
 let api_key = std::env::var("API_KEY").unwrap();  // CRITICAL VIOLATION

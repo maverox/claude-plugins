@@ -99,7 +99,7 @@ ast.literal_eval(user_input)  # For simple literals only
 ```typescript
 // CRITICAL - Hardcoded credentials
 const password = "admin123";
-const apiKey = "sk_live_xxxxx";
+const apiKey = "your-api-key-here";
 
 // CRITICAL - Weak password hashing
 const hash = md5(password);

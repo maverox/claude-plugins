@@ -175,7 +175,7 @@ Test your decision with edge cases:
 **Evidence**:
 ```bash
 curl https://api.stripe.com/v1/payment_intents \
-  -u sk_test_...: \
+  -u sk_test_EXAMPLE: \
   -d amount=2000  # Amount in cents
 ```
 **Decision**: StringMinorUnit (amount in cents)

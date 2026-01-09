@@ -169,7 +169,7 @@ let api_key = match &router_data.connector_auth_type {
 **Incorrect** (❌):
 ```rust
 // Hardcoded credentials
-let api_key = "sk_test_123456";  // WRONG
+let api_key = "sk_test_EXAMPLE";  // WRONG
 
 // From environment
 let api_key = std::env::var("API_KEY").unwrap();  // WRONG
