@@ -1,17 +1,4 @@
 {
-    "description": "Tool usage analytics hook for connector integration sessions",
-    "hooks": {
-        "PostToolUse": [
-            {
-                "matcher": "*",
-                "hooks": [
-                    {
-                        "type": "command",
-                        "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/tool_usage_hook.py",
-                        "timeout": 10
-                    }
-                ]
-            }
-        ]
-    }
+    "description": "Hooks for connector-integration-suite (currently disabled)",
+    "hooks": {}
 }

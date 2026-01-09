@@ -1,0 +1,42 @@
+{
+    "name": "software-engineering-suite",
+    "version": "1.1.0",
+    "description": "A comprehensive suite of generic software engineering skills and agents for code exploration, specification, validation, PR review, and automated GitHub integration.",
+    "author": {
+        "name": "Uzair Khan",
+        "url": "https://github.com/maverox"
+    },
+    "repository": "https://github.com/maverox/claude-plugins",
+    "license": "Apache-2.0",
+    "keywords": [
+        "software-engineering",
+        "code-review",
+        "pr-review",
+        "github",
+        "architecture",
+        "testing",
+        "requirements",
+        "planning",
+        "security",
+        "quality"
+    ],
+    "commands": [
+        "./commands/pr-review.md"
+    ],
+    "agents": [
+        "./agents/pr-review.md"
+    ],
+    "skills": [
+        "./skills/behavior-validation/SKILL.md",
+        "./skills/code-change-review/SKILL.md",
+        "./skills/code-quality-review/SKILL.md",
+        "./skills/codebase-exploration/SKILL.md",
+        "./skills/github-review-publisher/SKILL.md",
+        "./skills/pr-analysis/SKILL.md",
+        "./skills/requirements-architect/SKILL.md",
+        "./skills/spec-enforcement/SKILL.md",
+        "./skills/systematic-engineering/SKILL.md",
+        "./skills/task-breakdown/SKILL.md"
+    ],
+    "hooks": "./hooks/hooks.json"
+}
