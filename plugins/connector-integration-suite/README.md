@@ -27,14 +27,64 @@ Automated payment connector integration using skills-based architecture with sca
 
 ## Installation
 
-This plugin is bundled with the connector-service repository. No additional installation required.
+### From GitHub (Recommended)
 
 ```bash
-# Plugin already available at
-.claude-plugin/
-├── marketplace.json
-└── README.md
+# Add the marketplace
+/plugin marketplace add maverox/claude-plugins
+
+# Install the plugin
+/plugin install connector-integration-suite
+
+# Restart Claude Code to load the plugin
 ```
+
+### From Local Directory (Development)
+
+```bash
+# Add local marketplace
+/plugin marketplace add /path/to/claude-plugins
+
+# Install the plugin
+/plugin install connector-integration-suite@uzair-khan-registry
+```
+
+### Verify Installation
+
+```bash
+# Check installed plugins
+/plugin list
+
+# View available agents
+/agents
+```
+
+## What's Included
+
+| Component | Count | Description |
+|-----------|-------|-------------|
+| **Commands** | 2 | `/connector-integrate`, `/pr-review` |
+| **Agents** | 5 | Planning, Research, Implementation, Review, Testing |
+| **Skills** | 9 | Auto-activating skills for connector development |
+| **Hooks** | 1 | PostToolUse telemetry hook for analytics |
+
+### Skills (Auto-Activated)
+- `research-api-docs` - Scrape and parse API documentation
+- `plan-connector-implementation` - Create implementation plans
+- `generate-connector-code` - Generate production-ready Rust code
+- `review-connector-quality` - 100-point quality scoring
+- `test-connector-integration` - Run integration tests
+- `pr-analysis` - Analyze pull requests
+- `code-quality-review` - Code quality checks
+- `connector-integration-validator` - Validate integrations
+- `github-review-publisher` - Publish GitHub reviews
+
+### Agents (Manual Invocation)
+- `connector-planning` - Strategic implementation planning
+- `connector-research` - API documentation research
+- `connector-implementation` - Code generation
+- `connector-review` - Quality review
+- `connector-testing` - Integration testing
 
 ## Usage
 

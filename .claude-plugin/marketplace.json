@@ -5,11 +5,35 @@
         "url": "https://github.com/maverox"
     },
     "description": "Uzair Khan collection of Claude Code plugins",
+    "metadata": {
+        "version": "2.0.0"
+    },
     "plugins": [
         {
             "name": "connector-integration-suite",
-            "description": "Complete connector integration toolkit",
-            "source": "./plugins/connector-integration-suite"
+            "version": "2.0.0",
+            "description": "Complete toolkit for payment gateway connector integration with bulletproof line-accurate PR review, automated code generation, and quality validation",
+            "source": "./plugins/connector-integration-suite",
+            "category": "Development",
+            "tags": ["connector", "payment", "rust", "pr-review", "quality"],
+            "license": "Apache-2.0",
+            "author": {
+                "name": "Uzair Khan",
+                "url": "https://github.com/maverox"
+            }
+        },
+        {
+            "name": "software-engineering-suite",
+            "version": "1.0.0",
+            "description": "Comprehensive software engineering skills for codebase exploration, architecture design, systematic implementation, and code review",
+            "source": "./plugins/software-engineering-suite",
+            "category": "Development",
+            "tags": ["architecture", "code-review", "planning", "testing"],
+            "license": "Apache-2.0",
+            "author": {
+                "name": "Uzair Khan",
+                "url": "https://github.com/maverox"
+            }
         }
     ]
 }

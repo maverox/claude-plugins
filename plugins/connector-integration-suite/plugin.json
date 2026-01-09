@@ -28,5 +28,16 @@
         "./agents/connector-review.md",
         "./agents/connector-testing.md"
     ],
+    "skills": [
+        "./skills/connector-code-quality-review/SKILL.md",
+        "./skills/connector-integration-validator/SKILL.md",
+        "./skills/generate-connector-code/SKILL.md",
+        "./skills/github-review-publisher/SKILL.md",
+        "./skills/plan-connector-implementation/SKILL.md",
+        "./skills/pr-analysis/SKILL.md",
+        "./skills/research-api-docs/SKILL.md",
+        "./skills/review-connector-quality/SKILL.md",
+        "./skills/test-connector-integration/SKILL.md"
+    ],
     "hooks": "./hooks/hooks.json"
 }
